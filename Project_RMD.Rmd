@@ -1,0 +1,877 @@
+---
+title: "Project"
+output:
+  pdf_document: default
+  html_document: default
+---
+# Processing Big Data 
+In this project, a data of AirBnb (Netherlands) is collected from Kaggle. On this dataset, all the three types of algorithms are applied which includes Regression, Classification and Clustering. 
+
+Models that are implemented are following:
+
+- Regression
+  - Simple Linear Regression
+  - Multiple Linear Regression
+
+- Classification
+  - Random Forest
+  - Naive Bayes
+  
+- Clustering
+  - K-Means Clustering
+  - Hierarchical  Clustering
+  
+Initially, some useful packages are installed.
+
+## Installation of Packages
+```{r, eval=FALSE}
+install.packages("e1071")
+install.packages("caTools")
+install.packages("corrplot")
+install.packages("devtools")
+install.packages("dendextend")
+install.packages("tree")
+install.packages("zoo")
+install.packages("scales")
+install.packages("ggmap")
+install.packages("stringr")
+install.packages("gridExtra")
+install.packages("caret")
+install.packages("treemap")
+install.packages("psych")
+install.packages("DAAG")
+install.packages("leaps")
+install.packages("corrplot")
+install.packages("glmnet")
+install.packages("boot")
+install.packages("naniar")
+install.packages("tidyr")
+install.packages("DT")
+install.packages("ggplot2")
+install.packages("dplyr")
+install.packages("tidyverse")
+install.packages("kableExtra")
+install.packages("lubridate")
+install.packages("readxl")
+install.packages("highcharter")
+install.packages("scales")
+install.packages("RColorBrewer")
+install.packages("wesanderson")
+install.packages("plotly")
+install.packages("shiny")
+install.packages("readr")
+install.packages("choroplethr")
+install.packages("choroplethrMaps")
+install.packages("GGally")
+install.packages("ade4")
+install.packages("data.table")
+```
+
+After installing all the useful libraries, next step is to load the libraries in order to use it throughout the analysis.
+
+## Loading Packages
+```{r, include=FALSE}
+library(e1071)
+library(caTools)
+library(caret)
+library(corrplot)
+library(dendextend)
+library(ade4)
+library(data.table)
+library(tidyr)
+library(DT)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(kableExtra)
+library(lubridate)
+library(readxl)
+library(highcharter)
+library(lubridate)
+library(scales)
+library(RColorBrewer)
+library(wesanderson)
+library(plotly)
+library(shiny)
+library(readxl)
+library(readr)
+library(GGally)
+library(zoo)
+library(scales)
+library(ggmap)
+library(stringr)
+library(gridExtra)
+library(caret)
+library(treemap)
+library(psych)
+library(DAAG)
+library(leaps)
+library(glmnet)
+library(boot)
+library(naniar)
+```
+
+## Import Dataset in CSV format 
+
+Import dataset and saving it to a variable named as AirBnb in CSV format.
+Initial six observations are displayed to look a brief insight to all attributes and some records.
+
+```{r}
+AirBnb = read.csv("AirBNB.csv")
+head(AirBnb)
+```
+
+## Checking Dimensionality
+```{r}
+dim(AirBnb)
+```
+In our dataset we have 31 features and 7833 observations
+
+
+## Column Names
+
+Checking the names of all features, as they need to be appropriate to understand.
+
+```{r}
+colnames(AirBnb)
+```
+In our case all the names are good enough to read and understand.
+
+## Changing Character Data Types to Categorical Variables
+
+As we see, in column names there are some dimensions that has some categorical data. Initially when data is loaded they are read as character data type. In order to work on such variables their Data Types needs to be converted to Factor.
+
+```{r}
+AirBnb <- as.data.frame(unclass(AirBnb), stringsAsFactors = TRUE)
+str(AirBnb)
+```
+
+
+## Checking the Null Values in the Dataset
+
+Now we check the number of null values and variables that consist of null values in the dataset.  
+
+```{r}
+
+sum(is.na(AirBnb))
+
+summary(is.na(AirBnb))
+
+```
+Total number of NA's are 12051.
+In summary we can see there are some dimensions that consist of NA's which includes bathrooms, bedrooms, beds and reviews. 
+
+
+## Missing Values using Graphical Representation
+
+Here we can graphically visualize the null values in each attribute
+
+```{r, warning=FALSE}
+gg_miss_var(AirBnb)
+```
+
+## Heat Plot of Missing Values
+
+Heat plot that clearly mention the features containing null values and overall percentage of missing and present values.
+
+```{r}
+vis_miss(AirBnb) + theme(axis.text.x = element_text(angle = 90))
+```
+## Handling NA's and Null values
+
+Now null values in the dataset needs to be handled. 
+There are two types of data in our dataset that is numeric and non-numeric. For numeric values, NA's in a particular feature is replaced by the mean of the total observations present in that feature. As we don't have any NA's present in the non-numeric variables, so we will leave them as it is.
+
+## Imputation of Numeric Variables
+```{r}
+AirBnb <- AirBnb %>% 
+  mutate(review_scores_rating = ifelse(is.na(review_scores_rating), mean(review_scores_rating,na.rm=TRUE),review_scores_rating),
+         bedrooms = ifelse(is.na(bedrooms), mean(bedrooms,na.rm=TRUE),bedrooms), beds = ifelse(is.na(beds), mean(beds,na.rm=TRUE),beds),
+         bathrooms = ifelse(is.na(bathrooms), mean(bathrooms,na.rm=TRUE),bathrooms))
+
+AirBnb <- AirBnb %>% 
+  mutate(review_scores_accuracy = ifelse(is.na(review_scores_accuracy), mean(review_scores_accuracy,na.rm=TRUE),review_scores_accuracy),
+         review_scores_cleanliness = ifelse(is.na(review_scores_cleanliness), mean(review_scores_cleanliness,na.rm=TRUE),review_scores_cleanliness), 
+         review_scores_checkin = ifelse(is.na(review_scores_checkin), mean(review_scores_checkin,na.rm=TRUE),review_scores_checkin),
+         review_scores_communication = ifelse(is.na(review_scores_communication), mean(review_scores_communication,na.rm=TRUE),review_scores_communication),
+         review_scores_location = ifelse(is.na(review_scores_location), mean(review_scores_location,na.rm=TRUE),review_scores_location),
+         review_scores_value = ifelse(is.na(review_scores_value), mean(review_scores_value,na.rm=TRUE),review_scores_value))
+
+
+AirBnb <- AirBnb %>%
+  mutate(host_response_rate = ifelse(host_response_rate== "NA", mean(host_response_rate), host_response_rate),
+         host_response_time = ifelse(host_response_time== "NA", NA, host_response_time))
+
+```
+
+## Visualization of Dataset
+
+Here we again visualize the dataset after handling Null Values from the the dataset.
+
+```{r, warning=FALSE}
+gg_miss_var(AirBnb)
+```
+
+```{r}
+vis_miss(AirBnb) + theme(axis.text.x = element_text(angle = 90))
+```
+It's now confirm that our dataset has all the data present and there is no missing values anymore.
+
+## Summary of the loaded Dataset
+```{r}
+summary(AirBnb)
+```
+## Visulaizing the Data
+Visualizing data in terms of no. of dimensions, no. of observations, data types and all the column names using Glimpse
+
+```{r}
+glimpse(AirBnb)
+```
+# Exploratory Data Analysis
+
+## Analysis of neighbourhood_cleansed
+This pie chart is used to find the types of neighbour hood group in Netherland along with their percentages. 
+
+```{r}
+
+property_type_d <- data.frame(table(AirBnb$property_type))
+property_type_data <- property_type_d[,c('Var1', 'Freq')]
+fig <- plot_ly(property_type_data, labels = ~Var1, values = ~Freq, type = 'pie')
+fig
+
+```
+## Type of Listings present in each Neighbourhood Group
+
+```{r, message=FALSE}
+
+# Group neighbourhood_cleansed variable with room_type.
+property_df <-  AirBnb %>% 
+  group_by(neighbourhood_cleansed, room_type) %>% 
+  summarize(Freq = n())
+
+# Filtering room_type and grouping it with particular neighbourhood_cleansed
+total_property <-  AirBnb %>% 
+    filter(room_type %in% c("Private room","Entire home/apt","Shared room")) %>% 
+    group_by(neighbourhood_cleansed) %>% 
+    summarize(sum = n())
+
+# Merging both variables in order to visualize and plot
+property_ratio <- merge (property_df, total_property, by="neighbourhood_cleansed")
+
+property_ratio <- property_ratio %>% 
+  mutate(ratio = Freq/sum)
+
+# Plot listings present in each neighbourhood group
+ggplot(property_ratio, aes(x=neighbourhood_cleansed, y = ratio, fill = room_type)) + geom_bar(position = "dodge", stat="identity") + 
+  xlab("Neighbourhood Cleansed") + ylab ("Property Count") +
+  scale_fill_discrete(name = "Property Type") +
+  scale_y_continuous(labels = scales::percent) +
+  coord_flip()
+
+```
+
+Above graph shows the percentage of each listing in each neighbour hood cleansed. Furthermore, it gives insight that 'Shared Room' listings are amateur in all the groups. On the other hand 'Private Room' listings are most popular in each group except in Manhattan group.
+
+## Price comparison among each Neighbour Hood Group.
+
+```{r, warning=FALSE}
+AirBnb %>% 
+  group_by(neighbourhood_cleansed) %>% 
+  summarise(mean_price = mean(price, na.rm = TRUE)) %>% 
+  ggplot(aes(x = reorder(neighbourhood_cleansed, mean_price), y = mean_price, fill = neighbourhood_cleansed)) +
+  geom_col(stat ="identity", color = "black", fill="maroon") +
+  coord_flip() +
+  theme_gray() +
+  labs(x = "Neighbourhood Group", y = "Price") +
+  geom_text(aes(label = round(mean_price,digit = 2)), hjust = 2.0, color = "white", size = 3.5) +
+  ggtitle("Mean Price comparison for each Neighbourhood Group", subtitle = "Price vs Neighbourhood Group") + 
+  xlab("Neighbourhood Group") + 
+  ylab("Mean Price") +
+  theme(legend.position = "none",
+        plot.title = element_text(color = "black", size = 14, face = "bold", hjust = 1),
+        plot.subtitle = element_text(color = "black", hjust = 0.5),
+        axis.title.y = element_text(),
+        axis.title.x = element_text(),
+        axis.ticks = element_blank())
+```
+
+## Price analysis of room type
+
+```{r, message=FALSE}
+AirBnb %>% 
+  filter(!(is.na(room_type))) %>% 
+  filter(!(room_type == "Unknown")) %>% 
+  group_by(room_type) %>% 
+  summarise(mean_price = mean(price, na.rm = TRUE)) %>% 
+  ggplot(aes(x = reorder(room_type, mean_price), y = mean_price, fill = room_type)) +
+  geom_col(stat ="identity", color = "black", fill="orange") +
+  coord_flip() +
+  theme_gray() +
+  labs(x = "Room Type", y = "Price") +
+  geom_text(aes(label = round(mean_price,digit = 2)), hjust = 2.0, color = "black", size = 3.5) +
+  ggtitle("Mean Price comparison with all Room Types", subtitle = "Price vs Room Type") + 
+  xlab("Room Type") + 
+  ylab("Mean Price") +
+  theme(legend.position = "none",
+        plot.title = element_text(color = "black", size = 14, face = "bold", hjust = 0.5),
+        plot.subtitle = element_text(color = "black", hjust = 0.5),
+        axis.title.y = element_text(),
+        axis.title.x = element_text(),
+        axis.ticks = element_blank())
+```
+
+## Coorelation Matrix of numeric dimensions
+Correlation plot is made to find relationship among features.
+
+```{r}
+airbnb.corr <- AirBnb %>% 
+  select(price, minimum_nights, accommodates, bathrooms, bedrooms, beds, guests_included, extra_people)
+
+cor(airbnb.corr) # get the correlation matrix
+corrplot(cor(airbnb.corr), method = "number", type = "lower", bg = "grey") # put this in a nice table
+```
+
+
+# Regression Models
+We are going to implement two regression models. First one is linar regression and second is multiple regression.
+
+## Simple Linear Regression
+In linear regression model, variable which is going to be predict is price while the the predictor is accommodates.
+For simple linear regression, Does number of accommodates make an impact on price or not?
+
+Price vs Accommodates graph has been drawn to visualize the trend among the features.
+
+```{r}
+ggplot(data = AirBnb, mapping = aes(x = accommodates, y = price)) +
+  geom_jitter() # jitter instead of points, otherwise many dots get drawn over each other
+```
+
+After visualizing points, now drawing a regression line that best suits the points and has minimum r-squared value.
+
+```{r}
+ggplot(data = AirBnb, mapping = aes(x = accommodates, y = log(price, base = exp(1)))) +
+  geom_jitter() + # jitter instead of points, otherwise many dots get drawn over each other
+  stat_summary(fun.y=mean, colour="green", size = 4, geom="point", shape = 23, fill = "green") + # means
+  stat_smooth(method = "lm", se=FALSE) # regression line
+```
+
+
+We create a linear model. The first argument is the model which takes the form of dependent variable ~ independent variable(s). The second argument is the data we should consider.
+
+```{r}
+linearmodel <- lm(price ~ accommodates, data = AirBnb) 
+```
+
+Plot linear model to visualize stats of the model
+```{r}
+par(mfrow=c(2,2)) 
+plot(linearmodel)
+```
+
+Summary of the linear model to check parameters like p-value, r-square, adjusted r-squared
+
+```{r}
+summary(linearmodel) # ask for a summary of this linear model
+```
+
+# Multiple Linear Regression
+
+## Spliting Data into Training and Testing Data and removing outliers in Price
+In order to remove outliers, extreme values of price from lower and upper bound both. 
+```{r}
+AirBnb_filtered_data <- AirBnb %>%
+  filter(price < quantile(AirBnb$price, 0.9) & price > quantile(AirBnb$price, 0.1))
+```
+
+Storing training data in "training_data" and testing data in "testing_data". We split data in the ration 50:50
+```{r}
+set.seed(12345)
+AirBnb_filtered_data <- AirBnb_filtered_data %>% mutate(id = row_number())
+training_data <- AirBnb_filtered_data %>% sample_frac(.5) %>% filter(price > 0)
+testing_data <- anti_join(AirBnb_filtered_data, training_data, by = 'id') %>% filter(price > 0)
+```
+
+Checking the splitting of data is done correctly or not as we filter the data by omitting extreme values. Adding test and train data together it will be equal to the original data. This is a sanity check.
+```{r}
+nrow(training_data) + nrow(testing_data) == nrow(AirBnb_filtered_data %>% filter(price > 0))
+
+```
+
+
+Variable selection model is used to select the appropriate variables for the model. Here I used Best Subset Regression Method. 
+```{r, results='hide',warning=FALSE}
+best_fit_model <- regsubsets (price ~neighbourhood_cleansed + minimum_nights + accommodates + bathrooms + bedrooms + beds + guests_included + extra_people + property_type + room_type + number_of_reviews, data = training_data, nbest = 2, nvmax = 11)
+
+summary(best_fit_model)
+plot(best_fit_model, scale="bic")
+```
+
+According to variable selection method output, we consider neighourhood_cleansed, minimum_nights, property_type, accommodates, beds, bedrooms, bathrooms, extra_people and number of views. 
+
+## Linear Model Training with Training Data Set
+
+Now a model is created with the best variable selected by method. 
+
+```{r}
+Linear_Model<-lm(price ~ neighbourhood_cleansed + minimum_nights + accommodates + bathrooms + bedrooms + beds + extra_people + room_type +number_of_reviews, data = training_data)
+
+Linear_Model_Summary <- summary(Linear_Model)
+Linear_Model_MSE <- Linear_Model_Summary$sigma^2
+Linear_Model_RSQ <- Linear_Model_Summary$r.squared
+Linear_Model_ARSQ <- Linear_Model_Summary$adj.r.squared
+
+Linear_Model_Summary
+```
+
+MSE, R-Squared and Adjusted R-Squared of the Model are respectively.
+```{r}
+Linear_Model_MSE
+Linear_Model_RSQ
+Linear_Model_ARSQ
+```
+
+
+
+## Plot Linear Regression Model
+
+```{r}
+par(mfrow=c(2,2)) 
+plot(Linear_Model)
+
+```
+
+Residuals vs fitted values shows that the dots are not evenly distributed around zero and do not show a constant variance around X. This means that linearity and equal variance assumptions are not satisifed.
+
+QQ plot shows a 45 degree line meaning that Nomrality assumptions are met.
+
+## Testing our Linear Model with Testing Data set
+
+```{r}
+Linear_Model_Test <- predict(object = Linear_Model, newdata = testing_data)
+```
+
+
+Now calculating MSE for Test Data
+
+```{r}
+mean((Linear_Model_Test - testing_data$price)^2)
+```
+
+Calculating MSPE for filtered data set 
+
+```{r}
+
+Linear_Model_FD <-  glm (price ~ neighbourhood_cleansed + minimum_nights + accommodates + bathrooms + bedrooms + beds + extra_people + room_type +number_of_reviews, data = AirBnb_filtered_data)
+
+cv.glm(data= AirBnb_filtered_data, glmfit = Linear_Model_FD, K = 3)$delta[2]
+
+```
+
+Comparing MSE of the filtered data which is almost equals to 735 and the MSE of the test data is 739 which is very near to the value of fileterd data MSE. So variables selected for model are good predictors.  
+
+
+# Classification
+Based on the property characteristics and various parameters is the price high for particular property?
+
+## Decision Tree
+
+Loading Tree package
+```{r}
+require(tree)
+```
+
+For classification, we need a discrete variable for classification algorithm. In our case, target variable is price. We made another variable named as price_cat and categorize the price into "Cheap" and "Expensive". Price is categorize on the basis of mean of price, if price is greater than mean price, it is assigned to EXPENSIVE category and if less than mean price then the particular value is assigned to CHEAP category.
+
+New feature price_cat is attached with the original data and change the data type to factor for further processing. 
+
+```{r}
+AirBnb_filtered_data_cat <- AirBnb %>%
+  mutate(price_cat = ifelse(price <= mean(price),"Cheap","Expensive"))
+
+AirBnb_filtered_data_cat = data.frame(AirBnb_filtered_data_cat, AirBnb_filtered_data_cat$price_cat)
+
+AirBnb_filtered_data_cat$price_cat = as.factor(AirBnb_filtered_data_cat$price_cat)
+
+```
+
+We will drop the variables which are not important including price, as we can't have price variable here because pur response variable price_Cat is created from price.
+
+Afterwards, we will fit our model using AirBnb_filtered_data_cat, by setting the target variable i.e. price_cat.
+
+```{r, warning=FALSE}
+AirBnb_filtered_data_cat = select(AirBnb_filtered_data_cat, -c(price,host_id,host_name,host_since_year,host_since_anniversary,id,city,country,state,zipcode))
+
+tree.AirBnb_filtered_data_cat = tree(price_cat~., data = AirBnb_filtered_data_cat)
+
+```
+
+In summary we can see the terminal nodes, the residual mean deviance and missclassification error rate.
+
+```{r}
+summary(tree.AirBnb_filtered_data_cat)
+
+```
+
+- Residual mean deviance = 0.9146
+- Missclassification Error Rate = 0.2054
+
+Now plot the tree for better visuals
+```{r}
+plot(tree.AirBnb_filtered_data_cat)
+text(tree.AirBnb_filtered_data_cat, pretty = 0)
+
+tree.AirBnb_filtered_data_cat
+
+```   
+
+Each node is labeled with Yes or No with specific threshold value. 
+
+
+Now we split our data into ration 80:20. Now we refit the model with tree but this time we will use training dataset.
+```{r, warning=FALSE}
+
+set.seed(100)
+
+train = sample(1:nrow(AirBnb_filtered_data_cat), 5000)
+
+tree.AirBnb = tree(price_cat~., AirBnb_filtered_data_cat, subset = train)
+```
+
+Plot the tree model fitted with training dataset.
+
+```{r}
+plot(tree.AirBnb)
+text(tree.AirBnb, pretty = 0)
+
+```
+
+
+Next Step is to do prediction, whether our model is predicting good or not. 
+Afterwards we evaluate the error using a missclassification table.
+
+```{r, warning=FALSE}
+tree.pred = predict(tree.AirBnb_filtered_data_cat, AirBnb_filtered_data_cat[-train,], type="class")
+
+with(AirBnb_filtered_data_cat[-train,], table(tree.pred, price_cat))
+```
+
+On diagonal are the correct classifications while off the diagonal are incorrect classifications.
+```{r}
+
+(1726 + 508)/2833
+
+```
+We only get the correct ones that has an error of 0.78.
+
+
+When developing a large, bushy tree, there may be too much variation. As a result, let's utilise cross-validation to prune the tree as efficiently as possible. Use the misclassification error rate as the foundation for pruning using cv.tree.
+
+```{r, warning=FALSE}
+
+cv.AirBnb_filtered_data_cat = cv.tree(tree.AirBnb_filtered_data_cat, FUN = prune.misclass)
+
+cv.AirBnb_filtered_data_cat
+
+```
+
+
+
+```{r}
+plot(cv.AirBnb_filtered_data_cat)
+```
+
+Because of the misclassification error on 2833 cross-validated points, you can notice a downward spiral segment of the plot. So, in the downward steps 8, let's choose a value. Then, to identify that tree, let's trim it down to a size of 8. Let's plot and annotate the tree to see how it turns out.
+
+```{r}
+
+prune.AirBnb_filtered_data_cat = prune.misclass(tree.AirBnb_filtered_data_cat, best = 8)
+plot(prune.AirBnb_filtered_data_cat)
+text(prune.AirBnb_filtered_data_cat, pretty=0)
+
+```
+
+It's a bit shallower than previous trees, and you can actually read the labels. Let's evaluate it on the test dataset again.
+
+```{r, warning=FALSE}
+tree.pred = predict(prune.AirBnb_filtered_data_cat, AirBnb_filtered_data_cat[-train,], type="class")
+
+with(AirBnb_filtered_data_cat[-train,], table(tree.pred, price_cat))
+
+```
+It has done about the same as your original tree, so pruning did not hurt much with respect to misclassification errors, and gave a simpler tree.
+
+
+# Naive Bayes
+
+Splitting data into train and test data
+```{r}
+split <- sample.split(AirBnb_filtered_data_cat, SplitRatio = 0.7)
+train_cl <- subset(AirBnb_filtered_data_cat, split == "TRUE")
+test_cl <- subset(AirBnb_filtered_data_cat, split == "FALSE")
+
+```
+
+Fitting Naive Bayes Model to training dataset
+
+```{r}
+set.seed(12345) # Setting Seed
+classifier_cl <- naiveBayes(price_cat ~ ., data = train_cl)
+classifier_cl
+```
+
+Predicting on test data'
+
+```{r}
+y_pred <- predict(classifier_cl, newdata = test_cl)
+
+```
+
+Confusion Matrix
+
+```{r}
+cm <- table(test_cl$price_cat, y_pred)
+cm
+
+```
+
+Model Evaluation
+
+```{r}
+confusionMatrix(cm)
+
+```
+
+
+# Clustering
+
+## Principal Component Analysis
+
+```{r}
+airbnb.pca <- prcomp(AirBnb[,c(13:16,18:31)], center = TRUE, scale. = TRUE)
+summary(airbnb.pca)
+```
+
+
+
+Dropping varibales that will not be used in this model
+
+```{r}
+main_data = select(AirBnb, -c(host_id,host_name,host_since_year,host_since_anniversary,id,city,state,zipcode,review_scores_accuracy, review_scores_cleanliness,review_scores_checkin, review_scores_communication, review_scores_location, review_scores_value))
+dim(main_data)
+```
+
+Creating new independent data variables for model 
+
+```{r}
+data_new_var <- main_data %>%
+  mutate(bathroom_luxury = ifelse(bathrooms>0, accommodates/bathrooms,0),privacy = ifelse(bedrooms>0, beds/bedrooms,0))
+```
+
+## K - means Clustering 
+
+Remove columns that will not be useful for clustering like price and country
+
+```{r}
+clustering_data <- subset(data_new_var, select=-c(price,country))
+```
+
+Normalizing Function
+
+```{r}
+normalize <- function(x){
+  return ((x - min(x))/(max(x) - min(x)))
+}
+```
+
+Normalizing Variables before analysis
+
+```{r}
+names(clustering_data)
+sapply(clustering_data, class)
+
+clustering_data_norm = mutate(clustering_data, accom = normalize(accommodates), baths = normalize(bathrooms),
+                              reviews_count = normalize(number_of_reviews), review_rating = normalize(review_scores_rating), bedroom_count=normalize(bedrooms),
+                              bed_count=normalize(beds), bathrom_lux = normalize(bathroom_luxury), privacy=normalize(privacy))
+
+clustering_data_norm1 = as.data.frame(clustering_data_norm)
+clustering_data_norm2 = clustering_data_norm1 %>%
+  cbind(acm.disjonctif(clustering_data_norm1[,c("bed_type","property_type","room_type","neighbourhood_cleansed","host_response_time")]))%>%ungroup()
+```
+
+Remove the variables that are coded.
+
+```{r}
+clustering_data_norm3 = clustering_data_norm2 %>% 
+  select(-property_type,-room_type,-bed_type,-neighbourhood_cleansed,-host_response_time)
+
+```
+
+Remove columns that were created for factor levels that were not represented in the sample. 
+
+```{r}
+
+clustering_data_norm4 <- clustering_data_norm3[, colSums(clustering_data_norm3!=0, na.rm =TRUE)>0]
+
+```
+
+Now run K-means and look at the within SSE Curve
+
+```{r}
+SSE_curve <- c()
+sum(is.na(clustering_data_norm4))
+for(n in 1:15){
+  kcluster <- kmeans((clustering_data_norm4),n)
+  sse <- sum(kcluster$withinss)
+  SSE_curve[n] <- sse
+}
+
+SSE_curve
+```
+
+Elbow Method
+
+```{r}
+
+print("SSE curve for ideal k value")
+plot(1:15, SSE_curve, type="b", xlab="Number of clusters", ylab="SSE", main="Elbow Curve")
+
+kcluster<- kmeans(clustering_data_norm4, 4)
+
+print("The size of each clusters")
+kcluster$size
+```
+
+
+
+```{r}
+kcluster$centers
+```
+
+Adding a new column with the cluster assignment for each observation in the sample.
+
+```{r}
+segment<-kcluster$cluster
+clustering_data_norm5 <- cbind(clustering_data_norm4,segment)
+head(clustering_data_norm5)
+data_new_var <- as.data.frame(data_new_var)
+segment <- data.frame(segment, col.names="segment")
+```
+
+Segment
+
+```{r}
+airbnb_data_seg <- cbind(data_new_var,segment) 
+```
+
+Need to rename the column segment to cluster
+
+```{r}
+airbnb_data_seg<-rename(airbnb_data_seg, cluster = segment)
+```
+
+## Chart 1
+
+```{r}
+cluster1 <- subset(airbnb_data_seg, subset = airbnb_data_seg$segment == 1)
+
+ggplot(data = airbnb_data_seg, aes(x=room_type, fill = cluster))+geom_bar(stat="count",position=position_dodge())+
+  facet_grid(airbnb_data_seg$cluster)+labs(x="Types of Rooms", y="Number of Rooms", title = "Distribution of various types of rooms across clusters")
+```
+
+Cluster 4 has the highest number of ‘Entire home/apt’ as compared to all the other clusters followed by cluster 2. The majority of ‘Private rooms’ are in cluster 4. Cluster 1, 2 and 4 has no shared rooms. Overall, there are more number of rooms of type ‘Entire home/apt’ followed by ‘Private rooms’
+
+## Chart 2
+
+```{r}
+ggplot(data = airbnb_data_seg, aes(x=bedrooms, y=log(price), fill = cluster))+ 
+  geom_point(color = "plum", shape=23)+
+  geom_smooth(method = lm, se=FALSE)+
+  facet_wrap(airbnb_data_seg$cluster)+
+  labs(x="Number of bedrooms", y="Price", 
+  title = "Relationship b/w price and number of bedrooms")
+```
+As the number of bedrooms increase, the log_price tends to increase. That is, there seems to exist a positive linear relationship between number of bedrooms and the log_price of the room
+
+## Chart 3 
+
+```{r}
+ggplot(data = airbnb_data_seg, aes(x=log(price),fill = cluster))+ 
+  geom_histogram(bins=15)+
+  facet_grid(airbnb_data_seg$cluster)+
+  labs(x="Price", y="Number of Rooms", 
+  title = "Price of Rooms")
+```
+
+The log_price of the rooms follows a normal distribution. The cheapest room exists in cluster 1.The most expensive room lies in cluster 4
+Overall, rooms in cluster 4 are the most expensive, followed by rooms in cluster 4 and 2. The log_price of rooms in cluster 4 has the highest variance while the log_price of rooms in cluster 1 has the smallest variance
+
+# Hirerachial Clustering
+
+Use R's scale() function to scale all your column values
+
+```{r}
+hirerachial_data_1 <- as.data.frame(scale(clustering_data_norm4))
+summary(hirerachial_data_1)
+```
+
+Notice that means of all the attributes are zero and standard deviation is equal to one.
+
+All the values here are continuous numerical values, here we will use the euclidean distance method.
+
+```{r}
+hirerachial_data_2 <- dist(hirerachial_data_1, method = 'euclidean')
+```
+
+Applying Linkage Method
+
+```{r}
+hirerachial_data_3 <- hclust(hirerachial_data_2, method = "ward.D2")
+```
+
+Plot the hierarchical clustering
+
+```{r}
+
+plot(hirerachial_data_3, hang=-1, cex=0.7)
+
+```
+
+Set the K value to 3 (clusters) and plot
+
+If you visually want to see the clusters on the dendrogram you can use R's abline() function to draw the cut line and superimpose rectangular compartments for each cluster on the tree with the rect.hclust() function as shown in the following code:
+
+```{r}
+k_hirerachina_data_3 <- cutree(hirerachial_data_3, k = 4)
+
+plot(hirerachial_data_3)
+rect.hclust(hirerachial_data_3 , k = 4, border = 2:6)
+abline(h = 4, col = 'red')
+
+```
+
+
+Now we can see the three clusters enclosed in three different colored boxes. We can also use the color_branches() function from the dendextend library to visualize our tree with different colored branches.
+
+```{r}
+suppressPackageStartupMessages(library(dendextend))
+avg_dend_obj <- as.dendrogram(hirerachial_data_3)
+avg_col_dend <- color_branches(avg_dend_obj, h = 4)
+plot(avg_col_dend)
+```
+
+
+Now we will append the cluster results obtained back in the original dataframe under column name the cluster with mutate(), from the dplyr package and count how many observations were assigned to each cluster with the count() function.
+
+```{r}
+suppressPackageStartupMessages(library(dplyr))
+hirerachial_c1 <- mutate(hirerachial_data_1, cluster = k_hirerachina_data_3)
+count(hirerachial_c1,cluster)
+```
+
+It's common to evaluate the trend between two features based on the clustering that you did in order to extract more useful insights from the data cluster-wise. 
+```{r}
+suppressPackageStartupMessages(library(ggplot2))
+ggplot(hirerachial_c1, aes(x=beds, y = bedrooms, color = factor(cluster))) + geom_point()
+```
+
+
